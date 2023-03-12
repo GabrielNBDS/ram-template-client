@@ -80,7 +80,7 @@ export function Sidebar({ opened = false, setOpened }: SidebarProps) {
   ));
 
   return (
-    <Navbar h={opened ? 'calc(100vh - 60px)' : '100vh'} pos="fixed" top={opened ? '60px' : 0} display={(!isMd && !opened) ? 'none' : 'flex' } w={{ base: '100%', md: '300px' }} p="md">
+    <Navbar sx={{ zIndex: 100}} h={opened ? 'calc(100vh - 60px)' : '100vh'} pos="fixed" top={opened ? '60px' : 0} display={(!isMd && !opened) ? 'none' : 'flex' } w={{ base: '100%', md: '300px' }} p="md">
       <Navbar.Section grow>
         {!opened && (
           <Text component={Link} to="/dashboard" weight="bold" display="block" pb={12} fz={24} px={12}>

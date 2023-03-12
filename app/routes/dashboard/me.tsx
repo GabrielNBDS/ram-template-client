@@ -1,30 +1,70 @@
-import { Avatar, Button, Card, Container, Flex, Group, Stack, Text } from "@mantine/core";
+import { Button, Card, Container, Flex, Group, Stack, Text } from "@mantine/core";
 import type { ActionFunction} from "@remix-run/node";
+import { unstable_createMemoryUploadHandler} from "@remix-run/node";
+import { unstable_parseMultipartFormData} from "@remix-run/node";
 import { json} from "@remix-run/node";
-import { Outlet } from "@remix-run/react";
+import { Outlet, useActionData } from "@remix-run/react";
 import { FiLogOut } from "react-icons/fi";
-import type { AdonisError } from "~/@types/AdonisError";
-import ChangeEmailDialog from "~/components/ChangeEmailDialog";
-import ChangeNameDialog from "~/components/ChangeNameDialog";
-import ChangePasswordDialog from "~/components/ChangePasswordDialog";
-import ToggleThemeButton from "~/components/toggleThemeButton";
+import type { AdonisError, AdonisErrorItems } from "~/@types/AdonisError";
+import FormErrorsList from "~/components/formErrorsList";
+import ChangeEmailDialog from "~/components/me/ChangeEmailDialog";
+import ChangeNameDialog from "~/components/me/ChangeNameDialog";
+import ChangePasswordDialog from "~/components/me/ChangePasswordDialog";
+import EditAvatar from "~/components/me/EditAvatar";
+import ToggleThemeButton from "~/components/me/ToggleThemeButton";
+import { commitThemeSession, getThemeSession } from "~/cookies/theme.cookie";
 import getApi from "~/utils/api";
+import getAuthToken from "~/utils/getAuthToken";
+import useUser from "~/utils/hooks/useUser";
 import updateUser from "~/utils/updateUser";
 
 export const action: ActionFunction = async ({ request }) => {
   const api = await getApi(request)
-  const formData = await request.formData()
+  const uploadHandler = unstable_createMemoryUploadHandler({ maxPartSize: 1024 * 1024 * 50});
+  const formData = await unstable_parseMultipartFormData(
+    request,
+    uploadHandler
+  );
 
   const form = formData.get('action')
+
+  const avatar = formData.get('avatar') as File
+  if(avatar) {
+    const body = new FormData()
+    body.append('avatar', avatar)
+    const token = await getAuthToken(request)
+    const response = await fetch(
+      `${process.env.API_URL}/me/change-avatar`, 
+      { 
+        method: 'PATCH', 
+        body: body, 
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+    const data = await response.json()
+
+    if(response.status !== 200) {
+      return json(data)
+    }
+
+    
+    const headers = await updateUser(request, data)
+    
+    return json({ success: true, key: 'change-avatar' }, { headers });
+  }
+
+  console.log(form)
+
   switch (form) {
     case 'change-name':
       try {
         const name = formData.get('name')
-
+        
         const response = await api.patch('/me/change-name', { name })
-
+        
         const headers = await updateUser(request, response.data)
-      
         return json({ success: true, key: 'change-name' }, { headers });
       } catch (error) {
         return json({ errors: (error as AdonisError).response.data.errors })
@@ -52,33 +92,57 @@ export const action: ActionFunction = async ({ request }) => {
       } catch (error) {
         return json({ errors: (error as AdonisError).response.data.errors })
       }
+
+      case 'remove-avatar':
+        try {
+          console.log(1)
+          const response = await api.delete('/me/remove-avatar')
+          
+          const headers = await updateUser(request, response.data)
+          return json({ success: true, key: 'remove-avatar' }, { headers });
+        } catch (error) {
+          return json({ errors: (error as AdonisError).response.data.errors })
+        }
+      
+      case 'toggle-theme':
+        const themeSession = await getThemeSession(
+          request.headers.get("Cookie")
+        );
+      
+        const theme = themeSession.get("theme") || 'light'
+      
+        themeSession.set("theme", theme === 'light' ? 'dark' : 'light');
+      
+        return json(null, {
+          headers: {
+            "Set-Cookie": await commitThemeSession(themeSession),
+          },
+        });
   }
 
   return { data: true }
 }
 
 export default function Me() {
+  const { name, email } = useUser()
+  const actionData = useActionData() as { errors?: AdonisErrorItems[] }
+
   return (
     <Container size="xs" w="100%">
       <Card shadow="sm">
         <Stack>
           <Flex w="100%" justify="space-between">
             <Group>
-              <Avatar
-                w="128px"
-                h="128px"
-                sx={{ borderRadius: '50%' }}
-                src="https://avatars.githubusercontent.com/u/48018647?v=4"
-              />
+              <EditAvatar />
 
               <Stack spacing={2}>
                 <Text size="xl" weight={500}>
-                  Gabriel de Souza
+                  {name}
                   <ChangeNameDialog />
                 </Text>
 
                 <Text color="dimmed">
-                  gabriel.nbds@gmail.com
+                  {email}
                   <ChangeEmailDialog />
                 </Text>
               </Stack>
@@ -88,6 +152,8 @@ export default function Me() {
           </Flex>
 
           <Outlet />
+
+          <FormErrorsList errors={actionData?.errors} /> 
 
           <Flex w="100%" gap={8}>
             <ChangePasswordDialog />

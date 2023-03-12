@@ -1,10 +1,6 @@
-import type { ColorScheme } from "@mantine/core";
-import { MantineProvider, ColorSchemeProvider } from "@mantine/core";
-import type { ActionFunction, LoaderFunction, MetaFunction} from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import type { LoaderFunction, MetaFunction} from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
-  Form,
   Links,
   LiveReload,
   Meta,
@@ -13,11 +9,13 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from "@remix-run/react";
-import { useRef, useState } from "react";
+import type { ColorScheme} from "@mantine/core";
+import { ColorSchemeProvider, createEmotionCache, MantineProvider } from "@mantine/core";
+import { StylesPlaceholder } from "@mantine/remix";
+import { useState } from "react";
+import { getThemeSession } from "./cookies/theme.cookie";
 import { getAuthSession } from "./cookies/auth.cookie";
-import { commitThemeSession, getThemeSession } from "./cookies/theme.cookie";
-import useMatchesData from "./utils/hooks/useMatchesData";
-import { Notifications } from '@mantine/notifications';
+import { Notifications } from "@mantine/notifications";
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
@@ -25,25 +23,35 @@ export const meta: MetaFunction = () => ({
   viewport: "width=device-width,initial-scale=1",
 });
 
+createEmotionCache({ key: "mantine" });
+
 export default function App() {
-  const { theme } = useLoaderData();
+  const { theme } = useLoaderData<{ theme: ColorScheme }>()
+
+
+  const [colorScheme, setColorScheme] = useState<ColorScheme>(theme);
+  const toggleColorScheme = (value?: ColorScheme) =>
+    setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
 
   return (
-    <html lang="en">
-      <head>
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <MantineTheme defaultTheme={theme}>
-          <Outlet />
-        </MantineTheme>
-
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
-      </body>
-    </html>
+    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
+      <MantineProvider theme={{ colorScheme }} withGlobalStyles withNormalizeCSS>
+        <Notifications />
+        <html lang="en">
+          <head>
+            <StylesPlaceholder />
+            <Meta />
+            <Links />
+          </head>
+          <body>
+            <Outlet />
+            <ScrollRestoration />
+            <Scripts />
+            <LiveReload />
+          </body>
+        </html>
+      </MantineProvider>
+    </ColorSchemeProvider>
   );
 }
 
@@ -56,55 +64,9 @@ export const loader: LoaderFunction = async ({ request }) => {
   const authSession = await getAuthSession(
     request.headers.get("Cookie")
   );
+
   const user = authSession.get("user") || null
   delete user?.token
 
   return json({ theme, user });
-}
-
-export const action: ActionFunction = async ({ request }) => {
-  const themeSession = await getThemeSession(
-    request.headers.get("Cookie")
-  );
-
-  const theme = themeSession.get("theme") || 'light'
-
-  themeSession.set("theme", theme === 'light' ? 'dark' : 'light');
-
-  return redirect(request.headers.get("Referer") || '/', {
-    headers: {
-      "Set-Cookie": await commitThemeSession(themeSession),
-    },
-  });
-}
-
-function MantineTheme({ children, defaultTheme }: { children: React.ReactNode, defaultTheme: 'light' | 'dark' }) {
-  const { theme } = useMatchesData<{ theme: 'light' | 'dark'}>('root')
-  
-  const changeCookieThemeButtonRef = useRef<null | HTMLButtonElement>(null)
-  
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(theme);
-  const toggleColorScheme = (value?: ColorScheme) => {
-    changeCookieThemeButtonRef.current?.click()
-    setColorScheme(value || (colorScheme === "dark" ? "light" : "dark"))
-  }
-
-  return (
-    <ColorSchemeProvider
-      colorScheme={colorScheme}
-      toggleColorScheme={toggleColorScheme}
-    >
-      <MantineProvider
-        theme={{ colorScheme }}
-        withNormalizeCSS
-        withGlobalStyles
-      >
-        {children}
-        <Notifications />
-        <Form method="post">
-          <button ref={changeCookieThemeButtonRef} style={{ display: "none" }} type="submit">change theme</button>
-        </Form>
-      </MantineProvider>
-    </ColorSchemeProvider>
-  );
 }

@@ -26,12 +26,12 @@ const useStyles = createStyles((theme) => ({
 
 export function UserButton() {
   const { classes } = useStyles();
-  const { name, email } = useUser()
+  const { name, email, avatar } = useUser()
 
   return (
     <UnstyledButton component={Link} to="/dashboard/me" className={classes.user}>
       <Group>
-        <Avatar src="https://avatars.githubusercontent.com/u/48018647?v=4" radius="xl" />
+        <Avatar src={avatar?.url} radius="xl" />
 
         <div style={{ flex: 1 }}>
           <Text size="sm" weight={500}>

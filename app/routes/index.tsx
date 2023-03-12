@@ -7,7 +7,6 @@ import {
 	Title,
 } from '@mantine/core'
 import { Link } from '@remix-run/react'
-import ToggleThemeButton from '~/components/toggleThemeButton'
 
 export default function Home() {
 	return (
@@ -46,8 +45,6 @@ export default function Home() {
 					</Text>
 
           <Button component={Link} to="/login">Login</Button>
-
-					<ToggleThemeButton />
 				</Stack>
 			</Container>
 		</Box>

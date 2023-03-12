@@ -5,6 +5,7 @@ export interface User {
   name: string
   email: string
   token?: string
+  avatar?: { url?: string }
 }
 
 export default function useUser() {
