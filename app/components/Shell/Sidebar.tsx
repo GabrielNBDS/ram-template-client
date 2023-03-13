@@ -93,7 +93,7 @@ export function Sidebar({ opened = false, setOpened }: SidebarProps) {
       </Navbar.Section>
 
       <Navbar.Section className={classes.footer}>
-        <UserButton />
+        <UserButton setOpened={setOpened} />
       </Navbar.Section>
     </Navbar>
   );
