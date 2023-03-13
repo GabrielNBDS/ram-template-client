@@ -16,15 +16,21 @@ export const loader: LoaderFunction = async ({ request }) => {
     request.headers.get("Cookie")
   );
 
+  console.log(1)
   if(!user) {
+    console.log(2)
     if(!authSession?.data?.user?.token) return redirect('/login')
-
+    console.log(3)
+    
     const response = await api.get('/me', {
       headers: {
         Authorization: `Bearer ${authSession?.data?.user?.token}`
       }
     })
-
+    
+    console.log(4)
+    console.log(authSession?.data?.user?.token)
+    console.log(response.data)
     user = response.data
   }
   
