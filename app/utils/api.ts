@@ -12,6 +12,8 @@ export default async function getApi(request?: Request) {
     token = authSession.data.user.token
   }
 
+  console.log(token)
+
   const api = axios.create({
     baseURL: process.env.API_URL,
   });

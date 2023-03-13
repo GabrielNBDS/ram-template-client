@@ -37,7 +37,6 @@ export const action: ActionFunction = async ({ request }) => {
 
     const headers = new Headers()
     headers.append('Set-Cookie', await commitAuthSession(authSession))
-  
     return redirect('/dashboard', { headers });
   } catch (error) {
     return json({ errors: (error as AdonisError).response.data.errors })

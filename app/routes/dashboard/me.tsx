@@ -1,9 +1,10 @@
 import { Button, Card, Container, Flex, Group, Stack, Text } from "@mantine/core";
 import type { ActionFunction} from "@remix-run/node";
+import { redirect} from "@remix-run/node";
 import { unstable_createMemoryUploadHandler} from "@remix-run/node";
 import { unstable_parseMultipartFormData} from "@remix-run/node";
 import { json} from "@remix-run/node";
-import { Outlet, useActionData } from "@remix-run/react";
+import { Form, Outlet, useActionData } from "@remix-run/react";
 import { FiLogOut } from "react-icons/fi";
 import type { AdonisError, AdonisErrorItems } from "~/@types/AdonisError";
 import FormErrorsList from "~/components/formErrorsList";
@@ -12,6 +13,7 @@ import ChangeNameDialog from "~/components/me/ChangeNameDialog";
 import ChangePasswordDialog from "~/components/me/ChangePasswordDialog";
 import EditAvatar from "~/components/me/EditAvatar";
 import ToggleThemeButton from "~/components/me/ToggleThemeButton";
+import { destroyAuthSession, getAuthSession } from "~/cookies/auth.cookie";
 import { commitThemeSession, getThemeSession } from "~/cookies/theme.cookie";
 import getApi from "~/utils/api";
 import getAuthToken from "~/utils/getAuthToken";
@@ -55,8 +57,6 @@ export const action: ActionFunction = async ({ request }) => {
     return json({ success: true, key: 'change-avatar' }, { headers });
   }
 
-  console.log(form)
-
   switch (form) {
     case 'change-name':
       try {
@@ -95,7 +95,6 @@ export const action: ActionFunction = async ({ request }) => {
 
       case 'remove-avatar':
         try {
-          console.log(1)
           const response = await api.delete('/me/remove-avatar')
           
           const headers = await updateUser(request, response.data)
@@ -116,6 +115,17 @@ export const action: ActionFunction = async ({ request }) => {
         return json(null, {
           headers: {
             "Set-Cookie": await commitThemeSession(themeSession),
+          },
+        });
+
+      case 'logout':
+        await api.delete('/me/logout')
+        const authSession = await getAuthSession(
+          request.headers.get("Cookie")
+        );
+        return redirect('/login', {
+          headers: {
+            "Set-Cookie": await destroyAuthSession(authSession),
           },
         });
   }
@@ -158,7 +168,19 @@ export default function Me() {
           <Flex w="100%" gap={8}>
             <ChangePasswordDialog />
 
-            <Button variant="outline" w="100%" color="red" rightIcon={<FiLogOut />}>Sair</Button>
+            <Form style={{ width: '100%' }} encType="multipart/form-data" method="post" action="/dashboard/me">
+              <Button 
+                type="submit"
+                name="action"
+                value="logout" 
+                variant="outline" 
+                w="100%"
+                color="red" 
+                rightIcon={<FiLogOut />}
+              >
+                Sair
+              </Button>
+            </Form>
           </Flex>
         </Stack>
       </Card>

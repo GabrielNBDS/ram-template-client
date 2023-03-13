@@ -5,16 +5,28 @@ import { redirect } from "@remix-run/node";
 import { Outlet } from "@remix-run/react";
 import Shell from "~/components/Shell";
 import { commitAuthSession, getAuthSession } from "~/cookies/auth.cookie";
+import getApi from "~/utils/api";
 import withAuth from "~/utils/withAuth";
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await withAuth(request)
-
-  if(!user) return redirect('/login')
+  const api = await getApi()
+  let user = await withAuth(request)
 
   const authSession = await getAuthSession(
     request.headers.get("Cookie")
   );
+
+  if(!user) {
+    if(!authSession?.data?.user?.token) return redirect('/login')
+
+    const response = await api.get('/me', {
+      headers: {
+        Authorization: `Bearer ${authSession?.data?.user?.token}`
+      }
+    })
+
+    user = response.data
+  }
   
   authSession.set('user', { token: authSession.data.user.token, ...user })
 
