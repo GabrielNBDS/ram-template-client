@@ -16,21 +16,15 @@ export const loader: LoaderFunction = async ({ request }) => {
     request.headers.get("Cookie")
   );
 
-  console.log(1)
   if(!user) {
-    console.log(2)
     if(!authSession?.data?.user?.token) return redirect('/login')
-    console.log(3)
     
     const response = await api.get('/me', {
       headers: {
         Authorization: `Bearer ${authSession?.data?.user?.token}`
       }
     })
-    
-    console.log(4)
-    console.log(authSession?.data?.user?.token)
-    console.log(response.data)
+
     user = response.data
   }
   
@@ -39,7 +33,9 @@ export const loader: LoaderFunction = async ({ request }) => {
   const headers = new Headers()
   headers.append('Set-Cookie', await commitAuthSession(authSession))
 
-  return json({}, { headers })
+  delete user?.token
+
+  return json({ user }, { headers })
 }
 
 export default function Dashboard() {

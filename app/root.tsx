@@ -14,7 +14,6 @@ import { ColorSchemeProvider, createEmotionCache, MantineProvider } from "@manti
 import { StylesPlaceholder } from "@mantine/remix";
 import { useState } from "react";
 import { getThemeSession } from "./cookies/theme.cookie";
-import { getAuthSession } from "./cookies/auth.cookie";
 import { Notifications } from "@mantine/notifications";
 
 export const meta: MetaFunction = () => ({
@@ -61,12 +60,5 @@ export const loader: LoaderFunction = async ({ request }) => {
   );
   const theme = themeSession.get("theme") || 'light'
 
-  const authSession = await getAuthSession(
-    request.headers.get("Cookie")
-  );
-
-  const user = authSession.get("user") || null
-  delete user?.token
-
-  return json({ theme, user });
+  return json({ theme });
 }

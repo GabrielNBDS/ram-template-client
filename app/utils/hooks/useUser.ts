@@ -9,7 +9,7 @@ export interface User {
 }
 
 export default function useUser() {
-  const { user } = useMatchesData<{ user: User }>('root')
+  const { user } = useMatchesData<{ user: User }>('routes/dashboard')
 
   return user
 }
