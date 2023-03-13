@@ -23,13 +23,16 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
+interface UserButtonProps {
+  setOpened: React.Dispatch<React.SetStateAction<boolean>>
+}
 
-export function UserButton() {
+export function UserButton({ setOpened }: UserButtonProps) {
   const { classes } = useStyles();
   const { name, email, avatar } = useUser()
 
   return (
-    <UnstyledButton component={Link} to="/dashboard/me" className={classes.user}>
+    <UnstyledButton onClick={() => setOpened(false)} component={Link} to="/dashboard/me" className={classes.user}>
       <Group>
         <Avatar src={avatar?.url} radius="xl" />
 
