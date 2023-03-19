@@ -1,22 +1,16 @@
 import { Button, Modal, TextInput } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { Form, useActionData } from '@remix-run/react';
 import { FiKey } from 'react-icons/fi';
-import type { AdonisErrorItems } from '~/@types/AdonisError';
 import useGetFormErrors from '~/utils/hooks/useGetFormErrors';
 import { useRemixSubmit } from '~/utils/hooks/useRemixSubmit';
-import useTransitionLoading from '~/utils/hooks/useTransitionLoading';
 
 type TFields = 'password' | 'newPassword'
 
 export default function ChangePasswordDialog() {
   const [opened, { open, close }] = useDisclosure(false);
-
-  const actionData = useActionData() as { errors?: AdonisErrorItems[] }
-  const formErrors = useGetFormErrors<TFields>(actionData?.errors)
-
-  const { transition } = useRemixSubmit({
+  
+  const { fetcher, loading } = useRemixSubmit({
     queryKey: "change-password",
     onSuccess: () => {
       close()
@@ -27,12 +21,14 @@ export default function ChangePasswordDialog() {
     },
   });
 
+  const formErrors = useGetFormErrors<TFields>(fetcher)
+
   return (
     <>
       <Button onClick={open} w="100%" rightIcon={<FiKey />}>Trocar senha</Button>
 
       <Modal opened={opened} onClose={close} title="Escolha uma nova senha">
-      <Form encType="multipart/form-data" method="post" action="/dashboard/me">
+        <fetcher.Form encType="multipart/form-data" method="post" action="/dashboard/me">
           <TextInput
             mt={4}
             type="password"
@@ -50,8 +46,8 @@ export default function ChangePasswordDialog() {
           />
 
           <Button
-            mt={actionData?.errors ? 'sm' : 'md'}
-            loading={useTransitionLoading(transition)}
+            mt={Object.keys(formErrors).length ? 'sm' : 'md'}
+            loading={loading}
             type="submit"
             name="action"
             value="change-password"
@@ -59,7 +55,7 @@ export default function ChangePasswordDialog() {
           >
             Confirmar
           </Button>
-        </Form>
+        </fetcher.Form>
       </Modal>
     </>
   )

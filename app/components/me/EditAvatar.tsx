@@ -1,16 +1,14 @@
 import { ActionIcon, Avatar, Box, useMantineColorScheme, useMantineTheme } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { Form } from "@remix-run/react";
 import { FiCamera } from "react-icons/fi";
 import { useRemixSubmit } from "~/utils/hooks/useRemixSubmit";
-import useTransitionLoading from "~/utils/hooks/useTransitionLoading";
 import useUser from "~/utils/hooks/useUser";
 import RemoveAvatarModal from "./RemoveAvatarModal";
 
 export default function EditAvatar() {
   const { avatar } = useUser()
 
-  const { transition, submit } = useRemixSubmit({
+  const { fetcher, loading } = useRemixSubmit({
     queryKey: "change-avatar",
     onSuccess: () => {
       notifications.show({
@@ -38,9 +36,9 @@ export default function EditAvatar() {
         )}
       </Box>
 
-      <Form
+      <fetcher.Form
         onChange={(event) => {
-          submit(event.currentTarget, {
+          fetcher.submit(event.currentTarget, {
             encType: 'multipart/form-data',
             method: 'patch'
           })
@@ -61,7 +59,7 @@ export default function EditAvatar() {
             zIndex: 2,
             border: `2px solid ${dark ? theme.colors.dark[6] : theme.white}`
           }}
-          loading={useTransitionLoading(transition) && transition.submission?.action === '/dashboard/me'}
+          loading={loading}
         >
           <FiCamera />
         </ActionIcon>
@@ -82,7 +80,7 @@ export default function EditAvatar() {
           name="action"
           value="change-avatar"
         />
-      </Form>
+      </fetcher.Form>
     </Box>
   ) 
 }

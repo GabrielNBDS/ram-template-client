@@ -1,5 +1,5 @@
+import type { User } from "~/@types/User";
 import { commitAuthSession, getAuthSession } from "~/cookies/auth.cookie";
-import type { User } from "./hooks/useUser";
 
 export default async function updateUser(request: Request, user: User) {
   const authSession = await getAuthSession(

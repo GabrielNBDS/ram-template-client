@@ -2,7 +2,8 @@ import { Flex, Stack, useMantineColorScheme, useMantineTheme } from "@mantine/co
 import type { LoaderFunction} from "@remix-run/node";
 import { json} from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { Outlet } from "@remix-run/react";
+import { Outlet, useCatch } from "@remix-run/react";
+import ErrorPage from "~/components/ErrorPage";
 import Shell from "~/components/Shell";
 import { commitAuthSession, getAuthSession } from "~/cookies/auth.cookie";
 import getApi from "~/utils/api";
@@ -54,6 +55,29 @@ export default function Dashboard() {
         sx={{ minHeight: '100vh'}}
       >
         <Outlet />
+      </Stack>
+    </Flex>
+  )
+}
+
+export function CatchBoundary() {
+  const caught = useCatch();
+
+  const colorScheme = useMantineColorScheme()
+  const theme = useMantineTheme()
+
+  const dark = colorScheme.colorScheme === 'dark'
+
+  return (
+    <Flex direction={{ base: 'column', md: 'row' }} pt={{ base: '60px', md: 0 }} pl={{ base: 0, md: '300px' }}>
+      <Shell />
+      <Stack
+        py={16}
+        bg={dark ? theme.colors.dark[8] : theme.colors.gray[0]}
+        w="100%"
+        sx={{ minHeight: '100vh'}}
+      >
+        <ErrorPage code={caught.status} />
       </Stack>
     </Flex>
   )

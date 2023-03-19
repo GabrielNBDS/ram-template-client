@@ -1,12 +1,9 @@
 import { Button, Modal, TextInput, UnstyledButton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { Form, useActionData } from '@remix-run/react';
 import { FiEdit } from 'react-icons/fi';
-import type { AdonisErrorItems } from '~/@types/AdonisError';
 import useGetFormErrors from '~/utils/hooks/useGetFormErrors';
 import { useRemixSubmit } from '~/utils/hooks/useRemixSubmit';
-import useTransitionLoading from '~/utils/hooks/useTransitionLoading';
 import useUser from '~/utils/hooks/useUser';
 
 type TFields = 'name'
@@ -14,10 +11,7 @@ type TFields = 'name'
 export default function ChangeNameDialog() {
   const [opened, { open, close }] = useDisclosure(false);
 
-  const actionData = useActionData() as { errors?: AdonisErrorItems[] }
-  const formErrors = useGetFormErrors<TFields>(actionData?.errors)
-
-  const { transition } = useRemixSubmit({
+  const { fetcher, loading } = useRemixSubmit({
     queryKey: "change-name",
     onSuccess: () => {
       close()
@@ -28,6 +22,8 @@ export default function ChangeNameDialog() {
     },
   });
 
+  const formErrors = useGetFormErrors<TFields>(fetcher)
+
   const user = useUser()
 
   return (
@@ -37,7 +33,7 @@ export default function ChangeNameDialog() {
       </UnstyledButton>
 
       <Modal opened={opened} onClose={close} title="Escolha um novo nome de usuário">
-        <Form encType="multipart/form-data" method="post" action="/dashboard/me">
+        <fetcher.Form encType="multipart/form-data" method="post" action="/dashboard/me">
           <TextInput
             mt={4}
             type="text"
@@ -48,8 +44,8 @@ export default function ChangeNameDialog() {
           />
 
           <Button
-            mt={actionData?.errors ? 'sm' : 'md'}
-            loading={useTransitionLoading(transition)}
+            mt={Object.keys(formErrors).length ? 'sm' : 'md'}
+            loading={loading}
             type="submit"
             name="action"
             value="change-name"
@@ -57,7 +53,7 @@ export default function ChangeNameDialog() {
           >
             Confirmar
           </Button>
-        </Form>
+        </fetcher.Form>
       </Modal>
     </>
   )

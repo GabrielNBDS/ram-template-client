@@ -3,15 +3,13 @@ import { notifications } from "@mantine/notifications";
 import { useRemixSubmit } from "~/utils/hooks/useRemixSubmit";
 import { useDisclosure } from "@mantine/hooks";
 import { FiTrash } from "react-icons/fi";
-import useTransitionLoading from "~/utils/hooks/useTransitionLoading";
-import { Form } from "@remix-run/react";
 
 export default function RemoveAvatarDialog() {
   const [opened, { open, close }] = useDisclosure(false);
 
   const theme = useMantineTheme()
 
-  const { transition } = useRemixSubmit({
+  const { fetcher, loading } = useRemixSubmit({
     queryKey: "remove-avatar",
     onSuccess: () => {
       close()
@@ -48,10 +46,10 @@ export default function RemoveAvatarDialog() {
       </UnstyledButton>
 
       <Modal opened={opened} onClose={close} title="Deseja mesmo remover seu avatar?">
-        <Form encType="multipart/form-data" method="post" action="/dashboard/me">
+        <fetcher.Form encType="multipart/form-data" method="post" action="/dashboard/me">
           <Flex w="100%" gap={8}>
             <Button
-              loading={useTransitionLoading(transition)}
+              loading={loading}
               type="submit"
               name="action"
               value="remove-avatar"
@@ -61,7 +59,7 @@ export default function RemoveAvatarDialog() {
             </Button>
             <Button
               onClick={close}
-              disabled={useTransitionLoading(transition)}
+              disabled={loading}
               type="button"
               variant="subtle"
               fullWidth
@@ -69,7 +67,7 @@ export default function RemoveAvatarDialog() {
               Cancelar
             </Button>
           </Flex>
-        </Form>
+        </fetcher.Form>
       </Modal>
     </>
   )

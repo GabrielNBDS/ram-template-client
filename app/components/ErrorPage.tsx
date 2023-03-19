@@ -4,14 +4,28 @@ import { Title, Text, Button, Container, Group, Box, useMantineTheme } from '@ma
 import { Link } from '@remix-run/react'
 
 interface Props {
-	code: string | number;
-	title: string;
+	code?: string | number;
+	title?: string;
 	subtitle?: string;
 	showGoToHome?: boolean;
 	children?: ReactNode;
 }
+const errorTitles: { [key: string]: { title: string; subtitle: string}} = {
+	500: {
+		title: 'Erro interno',
+		subtitle: 'Ocorreu um erro inesperado por nossa parte. Por favor, tente novamente.'
+	},
+	404: {
+		title: 'Página não encontrada',
+		subtitle: 'A página desejada não foi encontrada. O endereço pode estar incorreto ou a página foi removida.'
+	},
+	403: {
+		title: 'Página restrita',
+		subtitle: 'Você não está autorizado a acessar esta página. Revise suas permissões ou contate o administrador.'
+	}
+}
 
-export default function ErrorPage({ code, title, subtitle = '', showGoToHome = false, children }: Props) {
+export default function ErrorPage({ code = 500, title, subtitle, showGoToHome = false, children }: Props) {
 	const theme = useMantineTheme()
 
 	return (
@@ -40,7 +54,7 @@ export default function ErrorPage({ code, title, subtitle = '', showGoToHome = f
 					fontSize: 32,
 				},
 			}}>
-        {title}
+        {title ?? errorTitles[code].title}
 			</Title>
 
 			<Text
@@ -54,7 +68,7 @@ export default function ErrorPage({ code, title, subtitle = '', showGoToHome = f
 					marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
 				}}
 			>
-				{subtitle}
+				{subtitle ?? errorTitles[code].subtitle}
 			</Text>
 
 			{showGoToHome && (

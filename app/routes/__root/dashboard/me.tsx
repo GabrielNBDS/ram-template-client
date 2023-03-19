@@ -4,10 +4,9 @@ import { redirect} from "@remix-run/node";
 import { unstable_createMemoryUploadHandler} from "@remix-run/node";
 import { unstable_parseMultipartFormData} from "@remix-run/node";
 import { json} from "@remix-run/node";
-import { Form, Outlet, useActionData } from "@remix-run/react";
+import { Form, useActionData } from "@remix-run/react";
 import { FiLogOut } from "react-icons/fi";
 import type { AdonisError, AdonisErrorItems } from "~/@types/AdonisError";
-import FormErrorsList from "~/components/formErrorsList";
 import ChangeEmailDialog from "~/components/me/ChangeEmailDialog";
 import ChangeNameDialog from "~/components/me/ChangeNameDialog";
 import ChangePasswordDialog from "~/components/me/ChangePasswordDialog";
@@ -86,9 +85,11 @@ export const action: ActionFunction = async ({ request }) => {
       try {
         const email = formData.get('email')
 
-        await api.patch('/me/change-email', { email })
+        const response = await api.patch('/me/change-email', { email })
+        
+        const headers = await updateUser(request, response.data)
       
-        return json({ success: true, key: 'change-email' });
+        return json({ success: true, key: 'change-email' }, { headers });
       } catch (error) {
         return json({ errors: (error as AdonisError).response.data.errors })
       }
@@ -96,8 +97,9 @@ export const action: ActionFunction = async ({ request }) => {
       case 'remove-avatar':
         try {
           const response = await api.delete('/me/remove-avatar')
-          
+
           const headers = await updateUser(request, response.data)
+
           return json({ success: true, key: 'remove-avatar' }, { headers });
         } catch (error) {
           return json({ errors: (error as AdonisError).response.data.errors })
@@ -119,7 +121,7 @@ export const action: ActionFunction = async ({ request }) => {
         });
 
       case 'logout':
-        await api.delete('/me/logout')
+        await api.delete('/logout')
         const authSession = await getAuthSession(
           request.headers.get("Cookie")
         );
@@ -129,8 +131,6 @@ export const action: ActionFunction = async ({ request }) => {
           },
         });
   }
-
-  return { data: true }
 }
 
 export default function Me() {
@@ -160,10 +160,6 @@ export default function Me() {
 
             <ToggleThemeButton />
           </Flex>
-
-          <Outlet />
-
-          <FormErrorsList errors={actionData?.errors} /> 
 
           <Flex w="100%" gap={8}>
             <ChangePasswordDialog />
