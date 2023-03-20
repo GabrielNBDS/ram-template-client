@@ -1,27 +1,27 @@
-import { Button, Card, Container, Flex, Group, Stack, Text } from "@mantine/core";
-import type { ActionFunction} from "@remix-run/node";
-import { redirect} from "@remix-run/node";
-import { unstable_createMemoryUploadHandler} from "@remix-run/node";
-import { unstable_parseMultipartFormData} from "@remix-run/node";
-import { json} from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
-import { FiLogOut } from "react-icons/fi";
-import type { AdonisError, AdonisErrorItems } from "~/@types/AdonisError";
-import ChangeEmailDialog from "~/components/me/ChangeEmailDialog";
-import ChangeNameDialog from "~/components/me/ChangeNameDialog";
-import ChangePasswordDialog from "~/components/me/ChangePasswordDialog";
-import EditAvatar from "~/components/me/EditAvatar";
-import ToggleThemeButton from "~/components/me/ToggleThemeButton";
-import { destroyAuthSession, getAuthSession } from "~/cookies/auth.cookie";
-import { commitThemeSession, getThemeSession } from "~/cookies/theme.cookie";
-import getApi from "~/utils/api";
-import getAuthToken from "~/utils/getAuthToken";
-import useUser from "~/utils/hooks/useUser";
-import updateUser from "~/utils/updateUser";
+import { Button, Card, Container, Flex, Group, Stack, Text } from "@mantine/core"
+import type { ActionFunction} from "@remix-run/node"
+import { redirect} from "@remix-run/node"
+import { unstable_createMemoryUploadHandler} from "@remix-run/node"
+import { unstable_parseMultipartFormData} from "@remix-run/node"
+import { json} from "@remix-run/node"
+import { Form } from "@remix-run/react"
+import { FiLogOut } from "react-icons/fi"
+import type { AdonisError } from "~/@types/AdonisError"
+import ChangeEmailDialog from "~/components/me/ChangeEmailDialog"
+import ChangeNameDialog from "~/components/me/ChangeNameDialog"
+import ChangePasswordDialog from "~/components/me/ChangePasswordDialog"
+import EditAvatar from "~/components/me/EditAvatar"
+import ToggleThemeButton from "~/components/me/ToggleThemeButton"
+import { destroyAuthSession, getAuthSession } from "~/cookies/auth.cookie"
+import { commitThemeSession, getThemeSession } from "~/cookies/theme.cookie"
+import getApi from "~/utils/api"
+import getAuthToken from "~/utils/getAuthToken"
+import useUser from "~/utils/hooks/useUser"
+import updateUser from "~/utils/updateUser"
 
 export const action: ActionFunction = async ({ request }) => {
   const api = await getApi(request)
-  const uploadHandler = unstable_createMemoryUploadHandler({ maxPartSize: 1024 * 1024 * 50});
+  const uploadHandler = unstable_createMemoryUploadHandler({ maxPartSize: 1024 * 1024 * 3});
   const formData = await unstable_parseMultipartFormData(
     request,
     uploadHandler
@@ -44,18 +44,20 @@ export const action: ActionFunction = async ({ request }) => {
         }
       }
     )
+    console.log(response)
     const data = await response.json()
 
+    const key = 'change-avatar'
     if(response.status !== 200) {
-      return json(data)
+      return json({ ...data, key })
     }
-
     
     const headers = await updateUser(request, data)
     
-    return json({ success: true, key: 'change-avatar' }, { headers });
+    return json({ success: true, key }, { headers });
   }
 
+  const key = form
   switch (form) {
     case 'change-name':
       try {
@@ -64,9 +66,9 @@ export const action: ActionFunction = async ({ request }) => {
         const response = await api.patch('/me/change-name', { name })
         
         const headers = await updateUser(request, response.data)
-        return json({ success: true, key: 'change-name' }, { headers });
+        return json({ success: true, key }, { headers });
       } catch (error) {
-        return json({ errors: (error as AdonisError).response.data.errors })
+        return json({ errors: (error as AdonisError).response.data.errors, key })
       }
 
     case 'change-password':
@@ -76,9 +78,9 @@ export const action: ActionFunction = async ({ request }) => {
 
         await api.patch('/me/change-password', { password, newPassword })
       
-        return json({ success: true, key: 'change-password' });
+        return json({ success: true, key });
       } catch (error) {
-        return json({ errors: (error as AdonisError).response.data.errors })
+        return json({ errors: (error as AdonisError).response.data.errors, key })
       }
 
     case 'change-email':
@@ -89,9 +91,9 @@ export const action: ActionFunction = async ({ request }) => {
         
         const headers = await updateUser(request, response.data)
       
-        return json({ success: true, key: 'change-email' }, { headers });
+        return json({ success: true, key }, { headers });
       } catch (error) {
-        return json({ errors: (error as AdonisError).response.data.errors })
+        return json({ errors: (error as AdonisError).response.data.errors, key })
       }
 
       case 'remove-avatar':
@@ -100,9 +102,9 @@ export const action: ActionFunction = async ({ request }) => {
 
           const headers = await updateUser(request, response.data)
 
-          return json({ success: true, key: 'remove-avatar' }, { headers });
+          return json({ success: true, key }, { headers });
         } catch (error) {
-          return json({ errors: (error as AdonisError).response.data.errors })
+          return json({ errors: (error as AdonisError).response.data.errors, key })
         }
       
       case 'toggle-theme':
@@ -135,7 +137,6 @@ export const action: ActionFunction = async ({ request }) => {
 
 export default function Me() {
   const { name, email } = useUser()
-  const actionData = useActionData() as { errors?: AdonisErrorItems[] }
 
   return (
     <Container size="xs" w="100%">

@@ -12,10 +12,10 @@ export const useRemixSubmit = ({ onError, onSuccess, queryKey }: UseRemixSubmitO
   const loading = fetcher.state === 'loading' || fetcher.state === 'submitting'
   
   useEffect(() => {
-    if (onSuccess && fetcher.type === 'done' && fetcher?.data?.key === queryKey) {
+    if (onSuccess && fetcher?.data?.success && fetcher.type === 'done' && fetcher?.data?.key === queryKey) {
       onSuccess(fetcher.data);
     }
-    if (onError && fetcher.type === 'done' && fetcher?.data?.key === queryKey) {
+    if (onError && !fetcher?.data?.success && fetcher.type === 'done' && fetcher?.data?.key === queryKey) {
       onError(fetcher.data);
     }
   }, [fetcher]);

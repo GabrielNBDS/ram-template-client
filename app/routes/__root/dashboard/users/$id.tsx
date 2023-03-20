@@ -1,10 +1,13 @@
-import { Avatar, Card, Container, Flex, Group, Stack, Text, UnstyledButton } from "@mantine/core"
+import { ActionIcon, Avatar, Button, Card, Container, Flex, Group, Modal, Stack, Text, UnstyledButton } from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
+import { notifications } from "@mantine/notifications"
 import type { LoaderFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { useLoaderData, useNavigate } from "@remix-run/react"
-import { FiArrowLeft } from "react-icons/fi"
+import { FiArrowLeft, FiTrash } from "react-icons/fi"
 import type { User } from "~/@types/User"
 import getApi from "~/utils/api"
+import { useRemixSubmit } from "~/utils/hooks/useRemixSubmit"
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const { id } = params
@@ -19,6 +22,19 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 }
 
 export default function UserPage() {
+  const [opened, { open, close }] = useDisclosure(false);
+
+  const { fetcher, loading } = useRemixSubmit({
+    queryKey: "change-email",
+    onSuccess: () => {
+      close()
+      notifications.show({
+        title: 'E-mail atualizado',
+        message: 'Seu e-mail foi atualizado.',
+      })
+    },
+  });
+
   const user = useLoaderData<User>()
   const navigate = useNavigate()
   return (
@@ -57,6 +73,22 @@ export default function UserPage() {
                 </Text>
               </Stack>
             </Group>
+
+            <ActionIcon onClick={open} color="red" variant="filled"><FiTrash /></ActionIcon>
+
+            <Modal opened={opened} onClose={close} title="Quer mesmo deletar esse usuário?">
+              <fetcher.Form encType="multipart/form-data" method="post" action="/dashboard/me">
+                <Button
+                  loading={loading}
+                  type="submit"
+                  name="action"
+                  value="change-email"
+                  fullWidth
+                >
+                  Confirmar
+                </Button>
+              </fetcher.Form>
+            </Modal>
           </Flex>
         </Stack>
       </Card>
