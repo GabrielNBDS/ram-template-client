@@ -6,8 +6,6 @@ import useGetFormErrors from '~/utils/hooks/useGetFormErrors';
 import { useRemixSubmit } from '~/utils/hooks/useRemixSubmit';
 import useUser from '~/utils/hooks/useUser';
 
-type TFields = 'name'
-
 export default function ChangeNameDialog() {
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -16,13 +14,12 @@ export default function ChangeNameDialog() {
     onSuccess: () => {
       close()
       notifications.show({
-        title: 'Perfil atualizado',
-        message: 'Seu nome foi atualizado',
+        message: 'Perfil atualizado',
       })
     },
   });
 
-  const formErrors = useGetFormErrors<TFields>(fetcher)
+  const formErrors = useGetFormErrors<'name'>(fetcher)
 
   const user = useUser()
 

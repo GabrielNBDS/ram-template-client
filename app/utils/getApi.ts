@@ -3,7 +3,7 @@ import { getAuthSession } from '~/cookies/auth.cookie';
 
 export default async function getApi(request?: Request) {
   let token: string | undefined;
-  
+
   if(request) {
     const authSession = await getAuthSession(
       request.headers.get("Cookie")

@@ -9,7 +9,7 @@ interface ShellHeaderProps {
 export default function ShellHeader({ opened, setOpened }: ShellHeaderProps) {
   const title = opened ? 'Close navigation' : 'Open navigation';
   return (
-    <Header display="flex" pos="fixed" height={60} p={12} sx={{ justifyContent: 'space-between', alignItems: 'center'}}>
+    <Header display="flex" pos="fixed" height={60} p={12} sx={{ zIndex: 100, justifyContent: 'space-between', alignItems: 'center'}}>
       <Text onClick={() => setOpened(false)} component={Link} to="/dashboard" weight="bold" fz={24}>
         RAM template
       </Text>

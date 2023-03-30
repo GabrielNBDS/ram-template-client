@@ -1,9 +1,10 @@
 import { ActionIcon, Avatar, Box, useMantineColorScheme, useMantineTheme } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import type { FormEvent } from "react";
 import { FiCamera } from "react-icons/fi";
 import { useRemixSubmit } from "~/utils/hooks/useRemixSubmit";
 import useUser from "~/utils/hooks/useUser";
-import RemoveAvatarModal from "./RemoveAvatarModal";
+import RemoveAvatarDialog from "./RemoveAvatarDialog";
 
 export default function EditAvatar() {
   const { avatar } = useUser()
@@ -12,16 +13,19 @@ export default function EditAvatar() {
     queryKey: "change-avatar",
     onSuccess: () => {
       notifications.show({
-        title: 'Avatar atualizado',
-        message: 'Seu avatar foi atualizado',
+        message: 'Avatar atualizado',
       })
     },
     onError: (data) => {
       const error = data?.errors.find((item: any) => item?.field === 'avatar')
       if(error?.message) {
         notifications.show({
-          title: 'Formato inválido',
           message: error?.message,
+          color: 'red'
+        })
+      } else {
+        notifications.show({
+          message: 'Ocorreu um erro inesperado, por favor, tente novamente.',
           color: 'red'
         })
       }
@@ -31,6 +35,33 @@ export default function EditAvatar() {
   const theme = useMantineTheme()
   const { colorScheme } = useMantineColorScheme()
 	const dark = colorScheme === 'dark'
+
+  function imageUpload(event: FormEvent<HTMLFormElement>) {
+    const formData = event.currentTarget;
+    const image = formData.querySelector("input[type=file]") as HTMLInputElement;
+    if (image && image.files) {
+        const selectedFile = image.files[0];
+        if (selectedFile.size > 3 * 1024 * 1024) {
+          notifications.show({
+            message: 'O tamanho máximo do arquivo deve ser de 3mb',
+            color: 'red'
+          })
+          return
+        } else {
+          const formData = new FormData(event.currentTarget)
+          formData.set('action', 'update-avatar');
+          fetcher.submit(formData, {
+            encType: 'multipart/form-data',
+            method: 'patch'
+          })
+        }
+    } else {
+      notifications.show({
+        message: 'Ocorreu um erro. Tente novamente.',
+        color: 'red'
+      })
+    }
+  }
 
   return (
     <>
@@ -43,17 +74,12 @@ export default function EditAvatar() {
             src={avatar?.url}
           />
           {avatar?.url && (
-            <RemoveAvatarModal />
+            <RemoveAvatarDialog />
           )}
         </Box>
 
         <fetcher.Form
-          onChange={(event) => {
-            fetcher.submit(event.currentTarget, {
-              encType: 'multipart/form-data',
-              method: 'patch'
-            })
-          }}
+          onChange={imageUpload}
           method="post" 
           action="/dashboard/me"
         >

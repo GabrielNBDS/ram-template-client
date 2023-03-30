@@ -5,8 +5,6 @@ import { FiKey } from 'react-icons/fi';
 import useGetFormErrors from '~/utils/hooks/useGetFormErrors';
 import { useRemixSubmit } from '~/utils/hooks/useRemixSubmit';
 
-type TFields = 'password' | 'newPassword'
-
 export default function ChangePasswordDialog() {
   const [opened, { open, close }] = useDisclosure(false);
   
@@ -15,13 +13,12 @@ export default function ChangePasswordDialog() {
     onSuccess: () => {
       close()
       notifications.show({
-        title: 'Senha atualizada',
-        message: 'Sua senha foi atualizada',
+        message: 'Senha atualizada',
       })
     },
   });
 
-  const formErrors = useGetFormErrors<TFields>(fetcher)
+  const formErrors = useGetFormErrors<'password' | 'newPassword'>(fetcher)
 
   return (
     <>

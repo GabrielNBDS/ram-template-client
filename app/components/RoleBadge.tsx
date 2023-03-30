@@ -1,6 +1,6 @@
 import { Badge } from "@mantine/core";
 
-const roles = [
+export const roles = [
   { label: 'Administrador', value: 'admin', color: "grape" },
   { label :'Usuário', value: 'user', color: "blue" }
 ];

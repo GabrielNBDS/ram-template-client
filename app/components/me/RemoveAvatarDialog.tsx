@@ -14,8 +14,7 @@ export default function RemoveAvatarDialog() {
     onSuccess: () => {
       close()
       notifications.show({
-        title: 'Avatar removido',
-        message: 'Seu avatar foi removido',
+        message: 'Avatar removido',
       })
     },
   });
@@ -47,7 +46,7 @@ export default function RemoveAvatarDialog() {
 
       <Modal opened={opened} onClose={close} title="Deseja mesmo remover seu avatar?">
         <fetcher.Form encType="multipart/form-data" method="post" action="/dashboard/me">
-          <Flex w="100%" gap={8}>
+          <Flex w="100%" direction={{ base: 'column', md: 'row' }} gap={8}>
             <Button
               loading={loading}
               type="submit"

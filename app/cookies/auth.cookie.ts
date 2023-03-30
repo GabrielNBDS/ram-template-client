@@ -1,9 +1,9 @@
 import { createCookieSessionStorage } from "@remix-run/node";
 
-const { 
-  getSession: getAuthSession, 
-  commitSession: commitAuthSession, 
-  destroySession: destroyAuthSession 
+const {
+  getSession: getAuthSession,
+  commitSession: commitAuthSession,
+  destroySession: destroyAuthSession
 } = createCookieSessionStorage({
     cookie: {
       name: "user",
@@ -11,6 +11,7 @@ const {
       path: "/",
       sameSite: "lax",
       secure: true,
+      maxAge: 2147483647
     },
   });
 

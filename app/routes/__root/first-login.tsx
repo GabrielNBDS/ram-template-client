@@ -3,72 +3,57 @@ import {
   Title,
   Group,
   Button,
-  TextInput,
   Container,
   PasswordInput,
 } from '@mantine/core';
 import type { ActionFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { redirect } from '@remix-run/node';
-import { commitAuthSession, getAuthSession } from '~/cookies/auth.cookie';
 import type { AdonisError } from '~/@types/AdonisError';
 import FormErrorsList from '~/components/formErrorsList';
-import { FiLock, FiMail } from 'react-icons/fi';
+import { FiLock } from 'react-icons/fi';
 import useGetFormErrors from '~/utils/hooks/useGetFormErrors';
 import getApi from '~/utils/getApi';
 import { useRemixSubmit } from '~/utils/hooks/useRemixSubmit';
+import updateUser from '~/utils/updateUser';
 
 export const action: ActionFunction = async ({ request }) => {
-  const api = await getApi()
+  const api = await getApi(request)
   const formData = await request.formData()
-
-  const email = formData.get('email')
+  
   const password = formData.get('password')
-
+  
   try {
-    const { data } = await api.post('/login', { email, password })
-
-    const authSession = await getAuthSession(
-      request.headers.get("Cookie")
-    );
-
-    authSession.set('user', { ...data })
-
-    const headers = new Headers()
-    headers.append('Set-Cookie', await commitAuthSession(authSession))
+    const { data } = await api.patch('/me/change-first-password', { password })
+    
+    const headers = await updateUser(request, data)
+    
     return redirect('/dashboard', { headers });
   } catch (error) {
     return json({ errors: (error as AdonisError).response.data.errors })
   }
 }
 
-export default function Login() {
+export default function FirstLogin() {
   const { fetcher, loading } = useRemixSubmit({})
-  const formErrors = useGetFormErrors<'email' | 'password'>(fetcher)
+  const formErrors = useGetFormErrors<'password'>(fetcher)
 
   return (
     <Container size={420} my={40}>
       <Title
+        order={2}
         align="center"
-        sx={{ fontWeight: 900 }}
+        sx={{ fontSize: 24 }}
       >
-        Bem-vindo
+        É seu primeiro login. Por favor, escolha uma nova senha.
       </Title>
 
       <fetcher.Form method="post">
         <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-          <TextInput
-            type="email"
-            error={formErrors.email}
-            name="email"
-            label="E-mail"
-            icon={<FiMail />}
-          />
-
           <PasswordInput 
             error={formErrors.password}
             name="password"
-            label="Senha"
+            label="Nova senha"
             mt="md"
             mb="lg"
             icon={<FiLock />}
@@ -78,7 +63,7 @@ export default function Login() {
 
           <Group position="apart" mt={fetcher.data?.errors ? '-8px' : 'md'} sx={{ justifyContent: 'center'}}>
             <Button loading={loading} type="submit" fullWidth mt="xl">
-              Entrar
+              Trocar senha
             </Button>
           </Group>
         </Paper>

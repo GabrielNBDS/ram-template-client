@@ -56,7 +56,7 @@ const useStyles = createStyles((theme, _params) => {
 });
 
 const data = [
-  { link: 'users', label: 'Users' },
+  { link: 'users', label: 'Usuários' },
 ];
 
 interface SidebarProps {

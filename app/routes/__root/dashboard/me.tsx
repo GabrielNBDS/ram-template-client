@@ -14,7 +14,7 @@ import EditAvatar from "~/components/me/EditAvatar"
 import ToggleThemeButton from "~/components/me/ToggleThemeButton"
 import { destroyAuthSession, getAuthSession } from "~/cookies/auth.cookie"
 import { commitThemeSession, getThemeSession } from "~/cookies/theme.cookie"
-import getApi from "~/utils/api"
+import getApi from "~/utils/getApi"
 import getAuthToken from "~/utils/getAuthToken"
 import useUser from "~/utils/hooks/useUser"
 import updateUser from "~/utils/updateUser"
@@ -28,34 +28,6 @@ export const action: ActionFunction = async ({ request }) => {
   );
 
   const form = formData.get('action')
-
-  const avatar = formData.get('avatar') as File
-  if(avatar) {
-    const body = new FormData()
-    body.append('avatar', avatar)
-    const token = await getAuthToken(request)
-    const response = await fetch(
-      `${process.env.API_URL}/me/change-avatar`, 
-      { 
-        method: 'PATCH', 
-        body: body, 
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    )
-    console.log(response)
-    const data = await response.json()
-
-    const key = 'change-avatar'
-    if(response.status !== 200) {
-      return json({ ...data, key })
-    }
-    
-    const headers = await updateUser(request, data)
-    
-    return json({ success: true, key }, { headers });
-  }
 
   const key = form
   switch (form) {
@@ -106,6 +78,33 @@ export const action: ActionFunction = async ({ request }) => {
         } catch (error) {
           return json({ errors: (error as AdonisError).response.data.errors, key })
         }
+
+      case 'update-avatar':
+        const token = await getAuthToken(request)
+        
+        const avatar = formData.get('avatar') as File
+        const body = new FormData()
+        body.append('avatar', avatar)
+        
+        const response = await fetch(
+          `${process.env.API_URL}/me/change-avatar`, 
+          { 
+            method: 'PATCH', 
+            body: body, 
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+        const data = await response.json()
+
+        if(response.status !== 200) {
+          return json({ ...data, key })
+        }
+        
+        const headers = await updateUser(request, data)
+        
+        return json({ success: true, key }, { headers });
       
       case 'toggle-theme':
         const themeSession = await getThemeSession(

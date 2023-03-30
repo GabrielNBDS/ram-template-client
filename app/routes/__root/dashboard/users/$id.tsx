@@ -1,17 +1,33 @@
-import { ActionIcon, Avatar, Button, Card, Container, Flex, Group, Modal, Stack, Text, UnstyledButton } from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
-import { notifications } from "@mantine/notifications"
-import type { LoaderFunction } from "@remix-run/node"
+import {
+  Avatar,
+  Card,
+  Container,
+  Flex,
+  Group,
+  Stack,
+  Text,
+  UnstyledButton
+} from "@mantine/core"
+import type { ActionFunction, LoaderFunction} from "@remix-run/node";
+import { redirect } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { useLoaderData, useNavigate } from "@remix-run/react"
-import { FiArrowLeft, FiTrash } from "react-icons/fi"
+import { FiArrowLeft } from "react-icons/fi"
+import type { AdonisError } from "~/@types/AdonisError"
 import type { User } from "~/@types/User"
-import getApi from "~/utils/api"
-import { useRemixSubmit } from "~/utils/hooks/useRemixSubmit"
+import ChangeUserRole from "~/components/users/ChangeUserRole";
+import DeleteUserDialog from "~/components/users/DeleteUserDialog";
+import getApi from "~/utils/getApi"
+import getUser from "~/utils/getUser"
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const { id } = params
+  const user = await getUser(request)
   const api = await getApi(request)
+    
+  if(user.id == id) {
+    return redirect('/dashboard/me')
+  }
 
   try {
     const response = await api.get(`/users/${id}`)
@@ -21,26 +37,50 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   }
 }
 
+export const action: ActionFunction = async ({ request, params }) => {
+  const { id } = params
+  const api = await getApi(request)
+  const formData = await request.formData()
+  
+  const form = formData.get('action')
+  console.log(1)
+  const key = form
+  switch (form) {
+    case 'delete-user':
+      try {
+        await api.delete(`/users/${id}`)
+    
+        return redirect('/dashboard/users',
+        {
+          headers: {
+            "Set-Cookie": 'deletedUser=1',
+          },
+        })
+      } catch (error) {
+        return json({ errors: (error as AdonisError).response.data.errors, key })
+      }
+    case 'change-role':
+      try {
+        const role = formData.get('role')
+        
+        await api.patch(`/users/${id}/change-role`, { role })
+        
+        return json({ success: true, key });
+      } catch (error) {
+        return json({ errors: (error as AdonisError).response.data.errors, key })
+      }
+  }
+}
+
 export default function UserPage() {
-  const [opened, { open, close }] = useDisclosure(false);
-
-  const { fetcher, loading } = useRemixSubmit({
-    queryKey: "change-email",
-    onSuccess: () => {
-      close()
-      notifications.show({
-        title: 'E-mail atualizado',
-        message: 'Seu e-mail foi atualizado.',
-      })
-    },
-  });
-
   const user = useLoaderData<User>()
+
   const navigate = useNavigate()
+
   return (
     <Container size="lg" w="100%">
-      <UnstyledButton 
-        display="flex" 
+      <UnstyledButton
+        display="flex"
         sx={{
           alignItems: 'center',
           gap: 4,
@@ -71,24 +111,12 @@ export default function UserPage() {
                 <Text color="dimmed">
                   {user.email}
                 </Text>
+
+                <ChangeUserRole defaultRole={user.role} />
               </Stack>
             </Group>
 
-            <ActionIcon onClick={open} color="red" variant="filled"><FiTrash /></ActionIcon>
-
-            <Modal opened={opened} onClose={close} title="Quer mesmo deletar esse usuário?">
-              <fetcher.Form encType="multipart/form-data" method="post" action="/dashboard/me">
-                <Button
-                  loading={loading}
-                  type="submit"
-                  name="action"
-                  value="change-email"
-                  fullWidth
-                >
-                  Confirmar
-                </Button>
-              </fetcher.Form>
-            </Modal>
+            <DeleteUserDialog />
           </Flex>
         </Stack>
       </Card>

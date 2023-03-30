@@ -1,6 +1,6 @@
-import getApi from "./api";
+import getApi from "./getApi";
 
-export default async function withAuth(request: Request) {
+export default async function withAuth() {
   const api = await getApi()
 
   try {

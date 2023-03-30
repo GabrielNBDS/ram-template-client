@@ -8,6 +8,7 @@ const { getSession: getThemeSession, commitSession: commitThemeSession } =
       path: "/",
       sameSite: "lax",
       secure: true,
+      maxAge: 2147483647
     },
   });
 

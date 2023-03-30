@@ -3,15 +3,16 @@ import type { LoaderFunction} from "@remix-run/node";
 import { json} from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { Outlet, useCatch } from "@remix-run/react";
+import type { User } from "~/@types/User";
 import ErrorPage from "~/components/ErrorPage";
 import Shell from "~/components/Shell";
 import { commitAuthSession, getAuthSession } from "~/cookies/auth.cookie";
-import getApi from "~/utils/api";
+import getApi from "~/utils/getApi";
 import withAuth from "~/utils/withAuth";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const api = await getApi()
-  let user = await withAuth(request)
+  let user: User = await withAuth()
 
   const authSession = await getAuthSession(
     request.headers.get("Cookie")
@@ -35,6 +36,8 @@ export const loader: LoaderFunction = async ({ request }) => {
   headers.append('Set-Cookie', await commitAuthSession(authSession))
 
   delete user?.token
+
+  if(user?.firstLogin) return redirect('/first-login')
 
   return json({ user }, { headers })
 }
